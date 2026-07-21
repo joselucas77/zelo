@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SidebarTrigger, useSidebar } from "./ui/sidebar";
 
 export function Header({
   title,
@@ -9,8 +10,10 @@ export function Header({
   description?: string;
   action?: ReactNode;
 }) {
+  const { isMobile } = useSidebar();
   return (
     <div className="mb-6 flex items-start justify-between gap-4">
+      {!isMobile && <SidebarTrigger />}
       <div className="min-w-0">
         <h1 className="truncate text-2xl font-semibold tracking-tight md:text-3xl">
           {title}

@@ -71,7 +71,7 @@ export default function ProdutosPage() {
   }, [q, products]);
 
   return (
-    <div>
+    <div className="w-full">
       <Header
         title="Produtos"
         description={`${products.length} itens no catálogo`}
