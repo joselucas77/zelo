@@ -11,7 +11,7 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import { NAV } from "@/lib/navigation-data";
-import Image from "next/image";
+import { Handbag } from "lucide-react";
 import Link from "next/link";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -20,17 +20,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="mb-6">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <Image
-                src="/zelo.png"
-                alt="Zelo"
-                className="h-16 w-16 pt-2 object-contain shrink-0"
-                width={64}
-                height={64}
-              />
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="text-base font-semibold">Zelo</span>
-              </div>
+            <SidebarMenuButton className="data-[slot=sidebar-menu-button]:p-1.5!">
+              <Handbag className="size-5! text-primary" />
+              <span className="text-base font-bold text-primary">ZELO</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
