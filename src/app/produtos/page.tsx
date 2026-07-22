@@ -35,11 +35,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Header, ProductThumb } from "@/components/header";
 import { productsService } from "@/services/products.service";
 import { useDataStore } from "@/store/useDataStore";
 import { currency } from "@/lib/format";
 import type { Product } from "@/types";
+import { ProductThumb } from "@/components/product-thumb";
 
 type FormState = Omit<Product, "id">;
 const empty: FormState = {
@@ -71,21 +71,7 @@ export default function ProdutosPage() {
   }, [q, products]);
 
   return (
-    <div className="w-full">
-      <Header
-        title="Produtos"
-        description={`${products.length} itens no catálogo`}
-        action={
-          <Button
-            onClick={() => setCreating(true)}
-            size="sm"
-            className="rounded-full"
-          >
-            <Plus className="mr-1 h-4 w-4" /> Novo
-          </Button>
-        }
-      />
-
+    <div className="w-full px-4">
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -96,7 +82,7 @@ export default function ProdutosPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-2">
         {filtered.map((p) => {
           const low = p.stock <= p.minStock;
           return (

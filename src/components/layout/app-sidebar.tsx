@@ -1,6 +1,5 @@
 "use client";
 
-import { NavMain } from "@/components/layout/nav-main";
 import {
   Sidebar,
   SidebarContent,
@@ -8,43 +7,14 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
+  SidebarGroup,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Package, Plus, Receipt, Users } from "lucide-react";
+import { NAV } from "@/lib/navigation-data";
 import Image from "next/image";
-
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/",
-      icon: LayoutDashboard,
-    },
-    {
-      title: "Produtos",
-      url: "/produtos",
-      icon: Package,
-    },
-    {
-      title: "Nova Venda",
-      url: "/nova-venda",
-      icon: Plus,
-    },
-    {
-      title: "Clientes",
-      url: "/clientes",
-      icon: Users,
-    },
-    {
-      title: "Histórico",
-      url: "/historico",
-      icon: Receipt,
-    },
-  ],
-};
+import Link from "next/link";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { open } = useSidebar();
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader className="mb-6">
@@ -66,7 +36,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {NAV.map((item) => (
+                <SidebarMenuItem key={item.to}>
+                  <SidebarMenuButton
+                    tooltip={item.label}
+                    render={
+                      <Link href={item.to}>
+                        {<item.icon />}
+                        <span>{item.label}</span>
+                      </Link>
+                    }
+                  ></SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

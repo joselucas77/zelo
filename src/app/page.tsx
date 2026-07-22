@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useDataStore } from "@/store/useDataStore";
 import { currency, dateTime, isToday } from "@/lib/format";
-import { Header } from "@/components/header";
 import Link from "next/link";
 
 function StatCard({
@@ -28,7 +27,7 @@ function StatCard({
     success: "bg-emerald-500/15 text-emerald-600",
   } as const;
   return (
-    <Card className="border-border/70 shadow-sm">
+    <Card className="@container/card">
       <CardContent className="p-4 md:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -71,9 +70,7 @@ export default function Dashboard() {
   const latest = sales.slice(0, 5);
 
   return (
-    <div>
-      <Header title="Olá 👋" description="Resumo rápido do seu dia." />
-
+    <div className="px-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={DollarSign}

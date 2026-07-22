@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-// import Navigation from "@/components/navigation";
 import { Toaster } from "@/components/ui/sonner";
 // @ts-expect-error CSS module declaration is provided by Next.js build tooling.
 import "./globals.css";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-// import AppSidebar from "@/components/layout/sidebar";
+import { SiteHeader } from "@/components/layout/site-header";
+import { BottomNavigation } from "@/components/layout/bottom-navigation";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -36,19 +36,24 @@ export default function RootLayout({
           }
         >
           <AppSidebar variant="inset" />
-          {children}
+
+          <SidebarInset>
+            <SiteHeader />
+            <div className="flex flex-1 flex-col pb-24 md:pb-6">
+              <div className="flex flex-1 flex-col">
+                <div className="@container/main flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                    {children}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <BottomNavigation />
+          </SidebarInset>
+
           <Toaster position="top-right" richColors />
         </SidebarProvider>
-        {/* <div className="min-h-screen bg-background text-foreground">
-          <SidebarProvider>
-            <AppSidebar />
-            <Navigation />
-            <main className="w-full min-w-md px-4 pt-6 md:px-8 md:pt-8">
-              {children}
-            </main>
-            <Toaster position="top-right" richColors />
-          </SidebarProvider>
-        </div> */}
       </body>
     </html>
   );

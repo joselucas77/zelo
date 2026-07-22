@@ -1,34 +1,11 @@
 "use client";
 
-import { LayoutDashboard, Package, Users, Plus, Receipt } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { NAV } from "@/lib/navigation-data";
 
-type NavItem = {
-  to: string;
-  label: string;
-  short: string;
-  icon: typeof LayoutDashboard;
-  primary?: boolean;
-};
-
-const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", short: "Início", icon: LayoutDashboard },
-  { to: "/produtos", label: "Produtos", short: "Produtos", icon: Package },
-  {
-    to: "/nova-venda",
-    label: "Nova Venda",
-    short: "Vender",
-    icon: Plus,
-    primary: true,
-  },
-  { to: "/clientes", label: "Clientes", short: "Clientes", icon: Users },
-  { to: "/historico", label: "Histórico", short: "Vendas", icon: Receipt },
-];
-
-export default function Navigation() {
+export function BottomNavigation() {
   const pathname = usePathname();
 
   const isActive = (to: string) =>
