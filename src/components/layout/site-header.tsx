@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NAV } from "@/lib/navigation-data";
+import { ModeToggle } from "./mode-toggle";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -25,6 +26,9 @@ export function SiteHeader() {
           />
         </div>
         <h1 className="text-base font-medium">{pageTitle}</h1>
+        <div className="ml-auto flex items-center gap-2">
+          <ModeToggle />
+        </div>
       </div>
     </header>
   );
