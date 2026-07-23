@@ -47,16 +47,30 @@ export default function NovaVenda() {
   const router = useRouter();
   const clients = useDataStore((s) => s.clients);
   const products = useDataStore((s) => s.products);
-  const { client, items, setClient, addProduct, updateQty, removeItem, clear } =
-    useCartStore();
+  const {
+    client,
+    items,
+    step,
+    payment,
+    status,
+    dueDate,
+    notes,
+    setClient,
+    addProduct,
+    updateQty,
+    removeItem,
+    setStep,
+    setPayment,
+    setStatus,
+    setDueDate,
+    setNotes,
+    clear,
+  } = useCartStore();
 
   const [clientPicker, setClientPicker] = useState(false);
   const [productPicker, setProductPicker] = useState(false);
-  const [checkout, setCheckout] = useState(false);
-  const [payment, setPayment] = useState<PaymentMethod>("pix");
-  const [status, setStatus] = useState<SaleStatus>("paid");
-  const [dueDate, setDueDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const checkout = step === "review" || step === "payment";
+  const checkoutStep = step === "payment" ? "payment" : "review";
 
   const total = useMemo(
     () => items.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
@@ -79,13 +93,11 @@ export default function NovaVenda() {
     });
     toast.success("Venda registrada!");
     clear();
-    setCheckout(false);
     router.push("/historico");
   };
 
   return (
     <div className="w-full px-4">
-      {/* Cliente */}
       <Card
         className="mb-3 cursor-pointer border-border/70 transition hover:border-primary/40"
         onClick={() => setClientPicker(true)}
@@ -210,7 +222,7 @@ export default function NovaVenda() {
           </div>
           <Button
             disabled={!canCheckout}
-            onClick={() => setCheckout(true)}
+            onClick={() => setStep("review")}
             size="lg"
             className="rounded-full"
           >
@@ -242,10 +254,17 @@ export default function NovaVenda() {
       />
 
       {/* Checkout */}
-      <Drawer open={checkout} onOpenChange={setCheckout}>
-        <DrawerContent>
+      <Drawer
+        open={checkout}
+        onOpenChange={(o) => {
+          if (!o) setStep("cart");
+        }}
+      >
+        <DrawerContent className="h-screen">
           <DrawerHeader>
-            <DrawerTitle>Resumo da venda</DrawerTitle>
+            <DrawerTitle>
+              {checkoutStep === "review" ? "Revisar carrinho" : "Pagamento"}
+            </DrawerTitle>
           </DrawerHeader>
           <div className="max-h-[70vh] overflow-y-auto px-4 pb-6">
             <div className="mb-3 rounded-xl border border-border bg-card p-3 text-sm">
@@ -256,95 +275,177 @@ export default function NovaVenda() {
               </div>
             </div>
 
-            <div className="mb-3 space-y-1">
-              {items.map((it) => (
-                <div
-                  key={it.productId}
-                  className="flex items-center justify-between text-sm"
+            {checkoutStep === "review" ? (
+              <>
+                {items.length === 0 ? (
+                  <div className="mb-4 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                    Carrinho vazio.
+                  </div>
+                ) : (
+                  <div className="mb-4 space-y-2">
+                    {items.map((it) => (
+                      <div
+                        key={it.productId}
+                        className="flex items-center gap-2 rounded-xl border border-border/70 p-2.5"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium">
+                            {it.productName}
+                          </div>
+                          <div className="text-xs text-muted-foreground tabular-nums">
+                            {currency(it.unitPrice)} ·{" "}
+                            {currency(it.unitPrice * it.quantity)}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              updateQty(it.productId, it.quantity - 1)
+                            }
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </Button>
+                          <div className="w-7 text-center text-sm font-medium tabular-nums">
+                            {it.quantity}
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              updateQty(it.productId, it.quantity + 1)
+                            }
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => removeItem(it.productId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  onClick={() => setStep("payment")}
+                  size="lg"
+                  className="w-full rounded-full"
+                  disabled={items.length === 0}
                 >
-                  <div className="min-w-0 truncate pr-2">
-                    {it.quantity}× {it.productName}
-                  </div>
-                  <div className="font-medium tabular-nums">
-                    {currency(it.unitPrice * it.quantity)}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-3">
-              <Label>Forma de pagamento</Label>
-              <Select
-                value={payment}
-                onValueChange={(v) => setPayment(v as PaymentMethod)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(PAYMENT_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
+                  Avançar para pagamento · {currency(total)}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="mb-3 space-y-1">
+                  {items.map((it) => (
+                    <div
+                      key={it.productId}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="min-w-0 truncate pr-2">
+                        {it.quantity}× {it.productName}
+                      </div>
+                      <div className="font-medium tabular-nums">
+                        {currency(it.unitPrice * it.quantity)}
+                      </div>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mb-3">
-              <Label>Status</Label>
-              <div className="mt-1 grid grid-cols-2 gap-2">
-                {(["paid", "pending"] as SaleStatus[]).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setStatus(s)}
-                    className={cn(
-                      "rounded-xl border px-3 py-2 text-sm font-medium transition",
-                      status === s
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground",
-                    )}
-                  >
-                    {s === "paid" ? "Pago" : "Pendente"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {status === "pending" && (
-              <div className="mb-3 space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
-                <div className="text-sm text-amber-700">
-                  Valor pendente:{" "}
-                  <span className="font-semibold">{currency(total)}</span>
                 </div>
-                <div>
-                  <Label>Data prevista</Label>
-                  <Input
-                    type="date"
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+
+                <div className="mb-3">
+                  <Label>Forma de pagamento</Label>
+                  <Select
+                    value={payment}
+                    onValueChange={(v) => setPayment(v as PaymentMethod)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PAYMENT_LABELS).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>
+                          {v}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="mb-3">
+                  <Label>Status</Label>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    {(["paid", "pending"] as SaleStatus[]).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setStatus(s)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2 text-sm font-medium transition",
+                          status === s
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground",
+                        )}
+                      >
+                        {s === "paid" ? "Pago" : "Pendente"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {status === "pending" && (
+                  <div className="mb-3 space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+                    <div className="text-sm text-amber-700">
+                      Valor pendente:{" "}
+                      <span className="font-semibold">{currency(total)}</span>
+                    </div>
+                    <div>
+                      <Label>Data prevista</Label>
+                      <Input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-4">
+                  <Label>Observações</Label>
+                  <Textarea
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
-              </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-full"
+                    onClick={() => setStep("review")}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={finalize}
+                    size="lg"
+                    className="flex-1 rounded-full"
+                  >
+                    <Check className="mr-2 h-4 w-4" /> Confirmar ·{" "}
+                    {currency(total)}
+                  </Button>
+                </div>
+              </>
             )}
-
-            <div className="mb-4">
-              <Label>Observações</Label>
-              <Textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-
-            <Button
-              onClick={finalize}
-              size="lg"
-              className="w-full rounded-full"
-            >
-              <Check className="mr-2 h-4 w-4" /> Confirmar venda ·{" "}
-              {currency(total)}
-            </Button>
           </div>
         </DrawerContent>
       </Drawer>
@@ -372,15 +473,15 @@ function ClientPicker({
   }, [q, clients]);
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent>
+      <DrawerContent className="h-screen">
         <DrawerHeader className="flex-row items-center gap-2">
           <Button size="icon" variant="ghost" onClick={onClose}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <DrawerTitle>Escolher cliente</DrawerTitle>
         </DrawerHeader>
-        <div className="px-4 pb-4">
-          <div className="relative mb-3">
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+          <div className="relative shrink-0 mb-3">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
@@ -390,29 +491,33 @@ function ClientPicker({
               className="rounded-xl pl-9"
             />
           </div>
-          <ScrollArea className="h-[60vh]">
-            <div className="space-y-1 pr-2">
-              {filtered.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => onPick(c)}
-                  className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent"
-                >
-                  <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {initials(c.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{c.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {c.whatsapp}
+          <div className="min-h-0 flex-1">
+            <ScrollArea className="h-full">
+              <div className="space-y-1 pr-2">
+                {filtered.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => onPick(c)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent"
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {initials(c.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {c.name}
+                      </div>
+                      <div className="truncate text-xs text-muted-foreground">
+                        {c.whatsapp}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
@@ -443,7 +548,7 @@ function ProductPicker({
   }, [q, products]);
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent>
+      <DrawerContent className="h-screen">
         <DrawerHeader className="flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Button size="icon" variant="ghost" onClick={onClose}>
@@ -455,8 +560,8 @@ function ProductPicker({
             Concluir
           </Button>
         </DrawerHeader>
-        <div className="px-4 pb-4">
-          <div className="relative mb-3">
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+          <div className="relative shrink-0 mb-3">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               autoFocus
@@ -466,30 +571,34 @@ function ProductPicker({
               className="rounded-xl pl-9"
             />
           </div>
-          <ScrollArea className="h-[60vh]">
-            <div className="space-y-1 pr-2">
-              {filtered.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => onPick(p)}
-                  disabled={p.stock <= 0}
-                  className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent disabled:opacity-50"
-                >
-                  <ProductThumb name={p.name} />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{p.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {p.stock} em estoque
+          <div className="min-h-0 flex-1">
+            <ScrollArea className="h-full">
+              <div className="space-y-1 pr-2">
+                {filtered.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => onPick(p)}
+                    disabled={p.stock <= 0}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent disabled:opacity-50"
+                  >
+                    <ProductThumb name={p.name} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {p.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {p.stock} em estoque
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-sm font-semibold tabular-nums">
-                    {currency(p.salePrice)}
-                  </div>
-                  {p.stock <= 0 && <Badge variant="outline">Esgotado</Badge>}
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
+                    <div className="text-sm font-semibold tabular-nums">
+                      {currency(p.salePrice)}
+                    </div>
+                    {p.stock <= 0 && <Badge variant="outline">Esgotado</Badge>}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>
