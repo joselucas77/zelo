@@ -485,11 +485,7 @@ function GroupForm({
                       <div className="flex items-center gap-2">
                         <Checkbox
                           checked={
-                            allChecked
-                              ? true
-                              : someChecked
-                                ? "indeterminate"
-                                : false
+                            allChecked ? true : someChecked ? undefined : false
                           }
                           onCheckedChange={(v) =>
                             setAllForModule(mod.key, v === true)

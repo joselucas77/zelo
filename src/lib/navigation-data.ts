@@ -1,4 +1,11 @@
-import { LayoutDashboard, Package, Plus, Receipt, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  Plus,
+  Receipt,
+  Settings,
+  Users,
+} from "lucide-react";
 
 type NavItem = {
   to: string;
@@ -20,4 +27,13 @@ export const NAV: NavItem[] = [
   },
   { to: "/clientes", label: "Clientes", short: "Clientes", icon: Users },
   { to: "/historico", label: "Histórico", short: "Vendas", icon: Receipt },
+];
+
+export const SECONDARY_NAV: NavItem[] = [
+  {
+    to: "/configuracoes",
+    label: "Configurações",
+    short: "Config",
+    icon: Settings,
+  },
 ];
