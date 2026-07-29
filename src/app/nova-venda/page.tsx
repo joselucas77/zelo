@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   ArrowLeft,
   Check,
@@ -25,6 +25,12 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"; // Importação do Modal adicionada
 import {
   Select,
   SelectContent,
@@ -453,6 +459,23 @@ export default function NovaVenda() {
   );
 }
 
+// --- NOVOS COMPONENTES REFACTORADOS ABAIXO ---
+
+// Hook simples para detectar mobile
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const onChange = () => setIsMobile(window.innerWidth < breakpoint);
+    mql.addEventListener("change", onChange);
+    setIsMobile(window.innerWidth < breakpoint);
+    return () => mql.removeEventListener("change", onChange);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 function ClientPicker({
   open,
   onClose,
@@ -465,62 +488,92 @@ function ClientPicker({
   onPick: (c: import("@/types").Client) => void;
 }) {
   const [q, setQ] = useState("");
+  const isMobile = useIsMobile();
+
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     return t
       ? clients.filter((c) => c.name.toLowerCase().includes(t))
       : clients;
   }, [q, clients]);
+
+  // Conteúdo compartilhado entre Desktop e Mobile (Busca + Lista)
+  const PickerContent = (
+    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+      <div className="relative shrink-0 mb-3">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          // autoFocus REMOVIDO AQUI para não abrir o teclado sozinho
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar..."
+          className="rounded-xl pl-9"
+        />
+      </div>
+      <div className="min-h-0 flex-1">
+        <ScrollArea className="h-full">
+          <div className="space-y-1 pr-2 pb-4">
+            {filtered.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => onPick(c)}
+                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent"
+              >
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {initials(c.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{c.name}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {c.whatsapp}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
+  );
+
+  // Se for Mobile, usa o Drawer original
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
+        <DrawerContent className="h-screen">
+          <DrawerHeader className="flex-row items-center gap-2">
+            <Button size="icon" variant="ghost" onClick={onClose}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <DrawerTitle>Escolher cliente</DrawerTitle>
+          </DrawerHeader>
+          {PickerContent}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Se for Desktop, usa o Modal (Dialog)
   return (
-    <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="h-screen">
-        <DrawerHeader className="flex-row items-center gap-2">
-          <Button size="icon" variant="ghost" onClick={onClose}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      {/* O segredo aqui é o grid-rows-[auto_1fr] e o [&>button]:hidden */}
+      <DialogContent className="sm:max-w-125 p-0 gap-0 overflow-hidden grid-rows-[auto_1fr] max-h-[85vh] [&>button]:hidden">
+        <DialogHeader className="flex-row items-center gap-2 p-4 pb-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onClose}
+            className="ml-0"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <DrawerTitle>Escolher cliente</DrawerTitle>
-        </DrawerHeader>
-        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-          <div className="relative shrink-0 mb-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              autoFocus
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar..."
-              className="rounded-xl pl-9"
-            />
-          </div>
-          <div className="min-h-0 flex-1">
-            <ScrollArea className="h-full">
-              <div className="space-y-1 pr-2">
-                {filtered.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => onPick(c)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent"
-                  >
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {initials(c.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {c.name}
-                      </div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {c.whatsapp}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+          <DialogTitle>Escolher cliente</DialogTitle>
+        </DialogHeader>
+        {PickerContent}
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -536,6 +589,8 @@ function ProductPicker({
   onPick: (p: import("@/types").Product) => void;
 }) {
   const [q, setQ] = useState("");
+  const isMobile = useIsMobile();
+
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     return t
@@ -546,61 +601,93 @@ function ProductPicker({
         )
       : products;
   }, [q, products]);
+
+  // Conteúdo compartilhado entre Desktop e Mobile (Busca + Lista)
+  const PickerContent = (
+    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+      <div className="relative shrink-0 mb-3">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          // autoFocus REMOVIDO AQUI para não abrir o teclado sozinho
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar..."
+          className="rounded-xl pl-9"
+        />
+      </div>
+      <div className="min-h-0 flex-1">
+        <ScrollArea className="h-full">
+          <div className="space-y-1 pr-2 pb-4">
+            {filtered.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onPick(p)}
+                disabled={p.stock <= 0}
+                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent disabled:opacity-50"
+              >
+                <ProductThumb name={p.name} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{p.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {p.stock} em estoque
+                  </div>
+                </div>
+                <div className="text-sm font-semibold tabular-nums">
+                  {currency(p.salePrice)}
+                </div>
+                {p.stock <= 0 && <Badge variant="outline">Esgotado</Badge>}
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    </div>
+  );
+
+  // Se for Mobile, usa o Drawer original
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
+        <DrawerContent className="h-screen">
+          <DrawerHeader className="flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" onClick={onClose}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DrawerTitle>Produtos</DrawerTitle>
+            </div>
+            <Button size="sm" onClick={onClose}>
+              Concluir
+            </Button>
+          </DrawerHeader>
+          {PickerContent}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Se for Desktop, usa o Modal (Dialog)
   return (
-    <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="h-screen">
-        <DrawerHeader className="flex-row items-center justify-between gap-2">
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-125 p-0 gap-0 overflow-hidden grid-rows-[auto_1fr] max-h-[85vh] [&>button]:hidden">
+        <DialogHeader className="flex-row items-center justify-between gap-2 p-4 pb-0">
           <div className="flex items-center gap-2">
-            <Button size="icon" variant="ghost" onClick={onClose}>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onClose}
+              className="ml-0"
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <DrawerTitle>Produtos</DrawerTitle>
+            <DialogTitle>Produtos</DialogTitle>
           </div>
           <Button size="sm" onClick={onClose}>
             Concluir
           </Button>
-        </DrawerHeader>
-        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-          <div className="relative shrink-0 mb-3">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              autoFocus
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar..."
-              className="rounded-xl pl-9"
-            />
-          </div>
-          <div className="min-h-0 flex-1">
-            <ScrollArea className="h-full">
-              <div className="space-y-1 pr-2">
-                {filtered.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => onPick(p)}
-                    disabled={p.stock <= 0}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent disabled:opacity-50"
-                  >
-                    <ProductThumb name={p.name} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">
-                        {p.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.stock} em estoque
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold tabular-nums">
-                      {currency(p.salePrice)}
-                    </div>
-                    {p.stock <= 0 && <Badge variant="outline">Esgotado</Badge>}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </DialogHeader>
+        {PickerContent}
+      </DialogContent>
+    </Dialog>
   );
 }
