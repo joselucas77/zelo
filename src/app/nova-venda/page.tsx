@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   Check,
   Minus,
   Plus,
-  Search,
   ShoppingCart,
   Trash2,
   User,
@@ -17,20 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"; // Importação do Modal adicionada
 import {
   Select,
   SelectContent,
@@ -39,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useDataStore } from "@/store/useDataStore";
 import { useCartStore } from "@/store/useCartStore";
 import { salesService } from "@/services/sales.service";
@@ -48,6 +40,9 @@ import { PAYMENT_LABELS } from "@/types";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { ProductThumb } from "@/components/product-thumb";
+
+import { ClientPicker } from "@/components/nova-venda/client-picker";
+import { ProductPicker } from "@/components/nova-venda/product-picker";
 
 export default function NovaVenda() {
   const router = useRouter();
@@ -103,9 +98,9 @@ export default function NovaVenda() {
   };
 
   return (
-    <div className="w-full px-4">
+    <div className="w-full h-[80vh] flex flex-col px-4">
       <Card
-        className="mb-3 cursor-pointer border-border/70 transition hover:border-primary/40"
+        className="mb-3 min-h-24 cursor-pointer border-border/70 transition hover:border-primary/40"
         onClick={() => setClientPicker(true)}
       >
         <CardContent className="flex items-center gap-3 p-3">
@@ -152,66 +147,80 @@ export default function NovaVenda() {
         </CardContent>
       </Card>
 
-      {/* Add produto button */}
-      <Button
-        onClick={() => setProductPicker(true)}
-        variant="outline"
-        className="mb-4 h-12 w-full justify-start rounded-xl border-dashed"
-      >
-        <Plus className="mr-2 h-4 w-4" /> Adicionar produto
-      </Button>
+      <div className="mb-4 flex gap-2">
+        <Button
+          onClick={() => setProductPicker(true)}
+          variant="outline"
+          className="h-12 flex-1 justify-start rounded-xl border-dashed"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Adicionar produto
+        </Button>
+        {items.length > 0 && (
+          <Button
+            onClick={clear}
+            variant="outline"
+            size="icon"
+            className="h-12 w-12 shrink-0 rounded-xl border-dashed border-destructive/40 text-destructive hover:border-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
-      {/* Cart */}
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
           Nenhum produto no carrinho.
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map((it) => (
-            <Card key={it.productId} className="border-border/70">
-              <CardContent className="flex items-center gap-3 p-3">
-                <ProductThumb name={it.productName} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">
-                    {it.productName}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {currency(it.unitPrice)} un
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-8 w-8"
-                    onClick={() => updateQty(it.productId, it.quantity - 1)}
-                  >
-                    <Minus className="h-3.5 w-3.5" />
-                  </Button>
-                  <div className="w-7 text-center text-sm font-medium tabular-nums">
-                    {it.quantity}
-                  </div>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-8 w-8"
-                    onClick={() => updateQty(it.productId, it.quantity + 1)}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => removeItem(it.productId)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="max-h-[50vh] flex-1">
+          <ScrollArea className="h-full **:data-radix-scroll-area-thumb:hidden">
+            <div className="space-y-2 p-0.5 pb-4 pr-3">
+              {items.map((it) => (
+                <Card key={it.productId} className="border-border/70">
+                  <CardContent className="flex items-center gap-3 p-3">
+                    <ProductThumb name={it.productName} />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
+                        {it.productName}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {currency(it.unitPrice)} un
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8"
+                        onClick={() => updateQty(it.productId, it.quantity - 1)}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <div className="w-7 text-center text-sm font-medium tabular-nums">
+                        {it.quantity}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8"
+                        onClick={() => updateQty(it.productId, it.quantity + 1)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => removeItem(it.productId)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       )}
 
@@ -237,7 +246,6 @@ export default function NovaVenda() {
         </div>
       </div>
 
-      {/* Client picker */}
       <ClientPicker
         open={clientPicker}
         onClose={() => setClientPicker(false)}
@@ -248,7 +256,6 @@ export default function NovaVenda() {
         clients={clients}
       />
 
-      {/* Product picker */}
       <ProductPicker
         open={productPicker}
         onClose={() => setProductPicker(false)}
@@ -267,13 +274,17 @@ export default function NovaVenda() {
         }}
       >
         <DrawerContent className="h-screen">
-          <DrawerHeader>
+          {/* 1. Header com shrink-0 para nunca encolher */}
+          <DrawerHeader className="shrink-0 px-4 md:px-6">
             <DrawerTitle>
               {checkoutStep === "review" ? "Revisar carrinho" : "Pagamento"}
             </DrawerTitle>
           </DrawerHeader>
-          <div className="max-h-[70vh] overflow-y-auto px-4 pb-6">
-            <div className="mb-3 rounded-xl border border-border bg-card p-3 text-sm">
+
+          {/* 2. Container principal com flex-1 e min-h-0 para o scroll funcionar */}
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 md:px-6">
+            {/* 3. Card de resumo fixo no topo (shrink-0) */}
+            <div className="mb-3 shrink-0 rounded-xl border border-border bg-card p-3 text-sm">
               <div className="font-medium">{client?.name}</div>
               <div className="text-xs text-muted-foreground">
                 {items.length} item{items.length === 1 ? "" : "s"} ·{" "}
@@ -288,66 +299,73 @@ export default function NovaVenda() {
                     Carrinho vazio.
                   </div>
                 ) : (
-                  <div className="mb-4 space-y-2">
-                    {items.map((it) => (
-                      <div
-                        key={it.productId}
-                        className="flex items-center gap-2 rounded-xl border border-border/70 p-2.5"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium">
-                            {it.productName}
-                          </div>
-                          <div className="text-xs text-muted-foreground tabular-nums">
-                            {currency(it.unitPrice)} ·{" "}
-                            {currency(it.unitPrice * it.quantity)}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              updateQty(it.productId, it.quantity - 1)
-                            }
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </Button>
-                          <div className="w-7 text-center text-sm font-medium tabular-nums">
-                            {it.quantity}
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-8 w-8"
-                            onClick={() =>
-                              updateQty(it.productId, it.quantity + 1)
-                            }
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-destructive"
-                            onClick={() => removeItem(it.productId)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  /* 4. Área de scroll com flex-1 e min-h-0 (igual aos Pickers) */
+                  <div className="min-h-0 flex-1 mb-4">
+                    <ScrollArea className="h-full **:data-radix-scroll-area-thumb:hidden">
+                      <div className="space-y-2 pr-3 pb-4 p-0.5">
+                        {items.map((it) => (
+                          <Card key={it.productId} className="border-border/70">
+                            <CardContent className="flex items-center gap-3 p-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium">
+                                  {it.productName}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {currency(it.unitPrice)} ·{" "}
+                                  {currency(it.unitPrice * it.quantity)}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8"
+                                  onClick={() =>
+                                    updateQty(it.productId, it.quantity - 1)
+                                  }
+                                >
+                                  <Minus className="h-3.5 w-3.5" />
+                                </Button>
+                                <div className="w-7 text-center text-sm font-medium tabular-nums">
+                                  {it.quantity}
+                                </div>
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  className="h-8 w-8"
+                                  onClick={() =>
+                                    updateQty(it.productId, it.quantity + 1)
+                                  }
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => removeItem(it.productId)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                    ))}
+                    </ScrollArea>
                   </div>
                 )}
-                <Button
-                  onClick={() => setStep("payment")}
-                  size="lg"
-                  className="w-full rounded-full"
-                  disabled={items.length === 0}
-                >
-                  Avançar para pagamento · {currency(total)}
-                </Button>
+                {/* 5. Botão fixo no fundo (shrink-0) */}
+                <div className="shrink-0">
+                  <Button
+                    onClick={() => setStep("payment")}
+                    size="lg"
+                    className="w-full rounded-full"
+                    disabled={items.length === 0}
+                  >
+                    Avançar para pagamento · {currency(total)}
+                  </Button>
+                </div>
               </>
             ) : (
               <>
@@ -432,7 +450,7 @@ export default function NovaVenda() {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 pb-4 shrink-0 mt-auto">
                   <Button
                     variant="outline"
                     size="lg"
@@ -456,238 +474,5 @@ export default function NovaVenda() {
         </DrawerContent>
       </Drawer>
     </div>
-  );
-}
-
-// --- NOVOS COMPONENTES REFACTORADOS ABAIXO ---
-
-// Hook simples para detectar mobile
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(true);
-
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const onChange = () => setIsMobile(window.innerWidth < breakpoint);
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < breakpoint);
-    return () => mql.removeEventListener("change", onChange);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
-function ClientPicker({
-  open,
-  onClose,
-  clients,
-  onPick,
-}: {
-  open: boolean;
-  onClose: () => void;
-  clients: import("@/types").Client[];
-  onPick: (c: import("@/types").Client) => void;
-}) {
-  const [q, setQ] = useState("");
-  const isMobile = useIsMobile();
-
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return t
-      ? clients.filter((c) => c.name.toLowerCase().includes(t))
-      : clients;
-  }, [q, clients]);
-
-  // Conteúdo compartilhado entre Desktop e Mobile (Busca + Lista)
-  const PickerContent = (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-      <div className="relative shrink-0 mb-3">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          // autoFocus REMOVIDO AQUI para não abrir o teclado sozinho
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar..."
-          className="rounded-xl pl-9"
-        />
-      </div>
-      <div className="min-h-0 flex-1">
-        <ScrollArea className="h-full">
-          <div className="space-y-1 pr-2 pb-4">
-            {filtered.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => onPick(c)}
-                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent"
-              >
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {initials(c.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{c.name}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {c.whatsapp}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  );
-
-  // Se for Mobile, usa o Drawer original
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-        <DrawerContent className="h-screen">
-          <DrawerHeader className="flex-row items-center gap-2">
-            <Button size="icon" variant="ghost" onClick={onClose}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <DrawerTitle>Escolher cliente</DrawerTitle>
-          </DrawerHeader>
-          {PickerContent}
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  // Se for Desktop, usa o Modal (Dialog)
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      {/* O segredo aqui é o grid-rows-[auto_1fr] e o [&>button]:hidden */}
-      <DialogContent className="sm:max-w-125 p-0 gap-0 overflow-hidden grid-rows-[auto_1fr] max-h-[85vh] [&>button]:hidden">
-        <DialogHeader className="flex-row items-center gap-2 p-4 pb-0">
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={onClose}
-            className="ml-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <DialogTitle>Escolher cliente</DialogTitle>
-        </DialogHeader>
-        {PickerContent}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ProductPicker({
-  open,
-  onClose,
-  products,
-  onPick,
-}: {
-  open: boolean;
-  onClose: () => void;
-  products: import("@/types").Product[];
-  onPick: (p: import("@/types").Product) => void;
-}) {
-  const [q, setQ] = useState("");
-  const isMobile = useIsMobile();
-
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    return t
-      ? products.filter(
-          (p) =>
-            p.name.toLowerCase().includes(t) ||
-            p.category.toLowerCase().includes(t),
-        )
-      : products;
-  }, [q, products]);
-
-  // Conteúdo compartilhado entre Desktop e Mobile (Busca + Lista)
-  const PickerContent = (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-      <div className="relative shrink-0 mb-3">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          // autoFocus REMOVIDO AQUI para não abrir o teclado sozinho
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar..."
-          className="rounded-xl pl-9"
-        />
-      </div>
-      <div className="min-h-0 flex-1">
-        <ScrollArea className="h-full">
-          <div className="space-y-1 pr-2 pb-4">
-            {filtered.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => onPick(p)}
-                disabled={p.stock <= 0}
-                className="flex w-full items-center gap-3 rounded-xl border border-border/60 p-2.5 text-left transition hover:border-primary/40 hover:bg-accent disabled:opacity-50"
-              >
-                <ProductThumb name={p.name} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{p.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {p.stock} em estoque
-                  </div>
-                </div>
-                <div className="text-sm font-semibold tabular-nums">
-                  {currency(p.salePrice)}
-                </div>
-                {p.stock <= 0 && <Badge variant="outline">Esgotado</Badge>}
-              </button>
-            ))}
-          </div>
-        </ScrollArea>
-      </div>
-    </div>
-  );
-
-  // Se for Mobile, usa o Drawer original
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-        <DrawerContent className="h-screen">
-          <DrawerHeader className="flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Button size="icon" variant="ghost" onClick={onClose}>
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <DrawerTitle>Produtos</DrawerTitle>
-            </div>
-            <Button size="sm" onClick={onClose}>
-              Concluir
-            </Button>
-          </DrawerHeader>
-          {PickerContent}
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  // Se for Desktop, usa o Modal (Dialog)
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-125 p-0 gap-0 overflow-hidden grid-rows-[auto_1fr] max-h-[85vh] [&>button]:hidden">
-        <DialogHeader className="flex-row items-center justify-between gap-2 p-4 pb-0">
-          <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onClose}
-              className="ml-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <DialogTitle>Produtos</DialogTitle>
-          </div>
-          <Button size="sm" onClick={onClose}>
-            Concluir
-          </Button>
-        </DialogHeader>
-        {PickerContent}
-      </DialogContent>
-    </Dialog>
   );
 }
