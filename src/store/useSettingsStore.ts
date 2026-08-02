@@ -81,10 +81,19 @@ export interface StoreInfo {
   document: string;
 }
 
+export interface VoucherSettings {
+  logo: string; // data URL
+  resellerName: string;
+  footerText: string;
+  showContact: boolean;
+}
+
 interface SettingsState {
   store: StoreInfo;
   groups: AccessGroup[];
+  voucher: VoucherSettings;
   setStore: (s: StoreInfo) => void;
+  setVoucher: (v: VoucherSettings) => void;
   addGroup: (g: Omit<AccessGroup, "id" | "createdAt">) => void;
   updateGroup: (id: string, g: Partial<AccessGroup>) => void;
   removeGroup: (id: string) => void;
@@ -100,6 +109,13 @@ const defaultStore: StoreInfo = {
   email: "",
   address: "",
   document: "",
+};
+
+const defaultVoucher: VoucherSettings = {
+  logo: "",
+  resellerName: "",
+  footerText: "Obrigado pela preferência! Documento sem valor fiscal.",
+  showContact: true,
 };
 
 const allPerms = (): Permissions =>
@@ -150,7 +166,9 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       store: defaultStore,
       groups: defaultGroups,
+      voucher: defaultVoucher,
       setStore: (s) => set({ store: s }),
+      setVoucher: (v) => set({ voucher: v }),
       addGroup: (g) =>
         set((state) => ({
           groups: [

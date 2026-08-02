@@ -10,6 +10,8 @@ import {
   Save,
   Users as UsersIcon,
   ChevronRight,
+  ImageOff,
+  Receipt,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -54,9 +56,132 @@ export default function ConfiguracoesPage() {
   return (
     <div className="w-full px-4">
       <StoreSection />
+      <VoucherSection />
       <UsersLinkCard />
       <GroupsSection />
     </div>
+  );
+}
+
+function VoucherSection() {
+  const voucher = useSettingsStore((s) => s.voucher);
+  const setVoucher = useSettingsStore((s) => s.setVoucher);
+  const [form, setForm] = useState(voucher);
+
+  useEffect(() => {
+    setForm(voucher);
+  }, [voucher]);
+
+  const dirty = JSON.stringify(form) !== JSON.stringify(voucher);
+
+  const onLogo = (file?: File | null) => {
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast.error("Escolha uma imagem de até 1 MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () =>
+      setForm((f) => ({ ...f, logo: String(reader.result || "") }));
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <Card className="mb-4">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Receipt className="h-4 w-4 text-primary" />
+          Comprovante (voucher)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center gap-4">
+          {form.logo ? (
+            <img
+              src={form.logo}
+              alt="Logo do comprovante"
+              className="h-16 w-16 rounded-full border border-border object-cover"
+            />
+          ) : (
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+              <ImageOff className="h-5 w-5" />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label>Logo</Label>
+            <div className="flex gap-2">
+              <Input
+                type="file"
+                accept="image/*"
+                className="max-w-55"
+                onChange={(e) => onLogo(e.target.files?.[0])}
+              />
+              {form.logo && (
+                <Button
+                  variant="outline"
+                  onClick={() => setForm({ ...form, logo: "" })}
+                >
+                  Remover
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <Label>Nome do revendedor</Label>
+            <Input
+              value={form.resellerName}
+              onChange={(e) =>
+                setForm({ ...form, resellerName: e.target.value })
+              }
+              placeholder="Ex.: Ana Souza"
+            />
+          </div>
+          <div className="flex items-end justify-between rounded-lg border border-border/70 p-3">
+            <div>
+              <div className="text-sm font-medium">Exibir contato</div>
+              <div className="text-xs text-muted-foreground">
+                Telefone, e-mail e endereço no rodapé.
+              </div>
+            </div>
+            <Switch
+              checked={form.showContact}
+              onCheckedChange={(v) => setForm({ ...form, showContact: v })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Rodapé</Label>
+            <Textarea
+              rows={2}
+              value={form.footerText}
+              onChange={(e) => setForm({ ...form, footerText: e.target.value })}
+              placeholder="Mensagem final do comprovante"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            disabled={!dirty}
+            onClick={() => setForm(voucher)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            disabled={!dirty}
+            onClick={() => {
+              setVoucher(form);
+              toast.success("Layout do comprovante salvo");
+            }}
+          >
+            <Save className="mr-1 h-4 w-4" /> Salvar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
