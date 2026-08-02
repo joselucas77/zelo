@@ -2,12 +2,19 @@ import type { ColumnDef } from "@tanstack/react-table";
 import {
   AlertTriangle,
   ArrowUpDown,
+  MoreVertical,
   PackagePlus,
   Pencil,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { currency } from "@/lib/format";
 import type { Product } from "@/types";
 
@@ -40,61 +47,77 @@ export function getProductColumns({
         const low = p.stock <= p.minStock;
         return (
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-medium">{p.name}</span>
-              {low && (
-                <Badge
-                  variant="outline"
-                  className="shrink-0 border-amber-500/40 text-amber-700"
-                >
-                  <AlertTriangle className="mr-1 h-3 w-3" /> Baixo
-                </Badge>
-              )}
-            </div>
-            <div className="truncate text-xs text-muted-foreground">
-              {p.description || p.category}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium">{p.name}</span>
+                {low && (
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 border-amber-500/40 text-amber-700"
+                  >
+                    <AlertTriangle className="mr-1 h-3 w-3" /> Baixo
+                  </Badge>
+                )}
+              </div>
+              <div className="sm:hidden">
+                <Popover>
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    }
+                  ></PopoverTrigger>
+                  <PopoverContent className="w-52" align="end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-9 px-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onStock(p);
+                      }}
+                    >
+                      <PackagePlus className="mr-2 h-4 w-4" />
+                      Entrada de estoque
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-9 px-3"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(p);
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar produto
+                    </Button>
+                    <Separator className="my-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-9 px-3 text-destructive hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(p);
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remover produto
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
-            {/* Info resumida para Mobile */}
             <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
-              {p.category} · {p.stock} un · {currency(p.salePrice)}
-            </div>
-
-            {/* AÇÕES SÓ NO MOBILE (Aparecem embaixo do nome) */}
-            <div className="mt-2 flex items-center gap-1 border-t border-border/50 pt-2 sm:hidden">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onStock(p);
-                }}
-              >
-                <PackagePlus className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(p);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(p);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {p.stock} un · {currency(p.salePrice)}
             </div>
           </div>
         );
@@ -141,7 +164,6 @@ export function getProductColumns({
               variant="ghost"
               className="h-8 w-8"
               onClick={() => onStock(p)}
-              aria-label="Entrada de estoque"
             >
               <PackagePlus className="h-4 w-4" />
             </Button>
@@ -150,7 +172,6 @@ export function getProductColumns({
               variant="ghost"
               className="h-8 w-8"
               onClick={() => onEdit(p)}
-              aria-label="Editar"
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -159,7 +180,6 @@ export function getProductColumns({
               variant="ghost"
               className="h-8 w-8 text-destructive"
               onClick={() => onDelete(p)}
-              aria-label="Remover"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

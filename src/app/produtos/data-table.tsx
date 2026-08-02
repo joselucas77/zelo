@@ -90,69 +90,74 @@ export function ProductsDataTable({
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2 w-full">
-        <div className="relative flex-1 min-w-0">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar produto ou categoria..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="rounded-xl pl-9"
-          />
-        </div>
+      {/* BARRA DE FILTROS: Empilha no mobile (flex-col), Fica lado a lado no Desktop (sm:flex-row) */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center w-full">
+        {/* Linha 1: Pesquisa e Filtro */}
+        <div className="flex items-center gap-2 w-full">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar produto ou categoria..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="rounded-xl pl-9"
+            />
+          </div>
 
-        <Popover>
-          <PopoverTrigger
-            render={
-              <Button
-                variant={categoryFilter !== "Todas" ? "default" : "outline"}
-                size="icon"
-                className="rounded-xl shrink-0"
-                aria-label="Filtrar categorias"
-              >
-                <ListFilter className="h-4 w-4" />
-              </Button>
-            }
-          ></PopoverTrigger>
-          <PopoverContent align="end" className="w-48 p-1">
-            <div className="flex flex-col gap-0.5">
-              <Button
-                variant={categoryFilter === "Todas" ? "secondary" : "ghost"}
-                size="sm"
-                className="justify-start h-8"
-                onClick={() =>
-                  table.getColumn("category")?.setFilterValue(undefined)
-                }
-              >
-                Todas as categorias
-              </Button>
-              {categories.map((c) => (
+          <Popover>
+            <PopoverTrigger
+              render={
                 <Button
-                  key={c}
-                  variant={categoryFilter === c ? "secondary" : "ghost"}
+                  variant={categoryFilter !== "Todas" ? "default" : "outline"}
+                  size="icon"
+                  className="rounded-xl shrink-0"
+                  aria-label="Filtrar categorias"
+                >
+                  <ListFilter className="h-4 w-4" />
+                </Button>
+              }
+            ></PopoverTrigger>
+            <PopoverContent align="end" className="w-48 p-1">
+              <div className="flex flex-col gap-0.5">
+                <Button
+                  variant={categoryFilter === "Todas" ? "secondary" : "ghost"}
                   size="sm"
                   className="justify-start h-8"
-                  onClick={() => table.getColumn("category")?.setFilterValue(c)}
+                  onClick={() =>
+                    table.getColumn("category")?.setFilterValue(undefined)
+                  }
                 >
-                  {c}
+                  Todas as categorias
                 </Button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+                {categories.map((c) => (
+                  <Button
+                    key={c}
+                    variant={categoryFilter === c ? "secondary" : "ghost"}
+                    size="sm"
+                    className="justify-start h-8"
+                    onClick={() =>
+                      table.getColumn("category")?.setFilterValue(c)
+                    }
+                  >
+                    {c}
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        {/* BOTÃO NOVO (Ícone no mobile, Texto no Desktop) */}
         <Button
           onClick={onCreateClick}
-          size="icon"
-          className="rounded-full shrink-0 sm:hidden"
+          size="lg"
+          className="w-full rounded-full sm:hidden"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" /> Adicionar novo produto
         </Button>
         <Button
           onClick={onCreateClick}
           size="sm"
-          className="rounded-full hidden sm:flex"
+          className="rounded-full hidden sm:flex shrink-0"
         >
           <Plus className="mr-1 h-4 w-4" /> Novo
         </Button>
@@ -171,7 +176,7 @@ export function ProductsDataTable({
                         className={
                           header.column.id === "name"
                             ? undefined
-                            : "hidden sm:table-cell" // Esconde TUDO no mobile, exceto o nome
+                            : "hidden sm:table-cell"
                         }
                       >
                         {header.isPlaceholder
