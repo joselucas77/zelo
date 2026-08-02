@@ -12,7 +12,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ListFilter,
+  Plus,
+  Search,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,24 +31,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import type { Product } from "@/types";
 
 export function ProductsDataTable({
   columns,
   data,
   categories,
-  onCreateClick, // NOVA PROP RECEBIDA AQUI
+  onCreateClick,
 }: {
   columns: ColumnDef<Product>[];
   data: Product[];
   categories: string[];
-  onCreateClick: () => void; // TIPO DA NOVA PROP
+  onCreateClick: () => void;
 }) {
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -86,40 +90,70 @@ export function ProductsDataTable({
 
   return (
     <div>
-      <div className="mb-4 flex flex-col sm:justify-between gap-2 sm:flex-row sm:items-center">
-        <div className="flex gap-2 flex-row items-center w-full">
-          <div className="relative flex w-full max-w-sm items-center">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Buscar produto ou categoria..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="rounded-xl pl-9"
-            />
-          </div>
-          <Select
-            value={categoryFilter}
-            onValueChange={(v) =>
-              table
-                .getColumn("category")
-                ?.setFilterValue(v === "Todas" ? undefined : v)
-            }
-          >
-            <SelectTrigger className="w-full max-w-48">
-              <SelectValue placeholder="Categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todas">Todas as categorias</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="mb-4 flex items-center gap-2 w-full">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar produto ou categoria..."
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="rounded-xl pl-9"
+          />
         </div>
-        {/* BOTÃO AGORA CONECTADO CORRETAMENTE */}
-        <Button onClick={onCreateClick} size="sm" className="rounded-full">
+
+        <Popover>
+          <PopoverTrigger
+            render={
+              <Button
+                variant={categoryFilter !== "Todas" ? "default" : "outline"}
+                size="icon"
+                className="rounded-xl shrink-0"
+                aria-label="Filtrar categorias"
+              >
+                <ListFilter className="h-4 w-4" />
+              </Button>
+            }
+          ></PopoverTrigger>
+          <PopoverContent align="end" className="w-48 p-1">
+            <div className="flex flex-col gap-0.5">
+              <Button
+                variant={categoryFilter === "Todas" ? "secondary" : "ghost"}
+                size="sm"
+                className="justify-start h-8"
+                onClick={() =>
+                  table.getColumn("category")?.setFilterValue(undefined)
+                }
+              >
+                Todas as categorias
+              </Button>
+              {categories.map((c) => (
+                <Button
+                  key={c}
+                  variant={categoryFilter === c ? "secondary" : "ghost"}
+                  size="sm"
+                  className="justify-start h-8"
+                  onClick={() => table.getColumn("category")?.setFilterValue(c)}
+                >
+                  {c}
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* BOTÃO NOVO (Ícone no mobile, Texto no Desktop) */}
+        <Button
+          onClick={onCreateClick}
+          size="icon"
+          className="rounded-full shrink-0 sm:hidden"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <Button
+          onClick={onCreateClick}
+          size="sm"
+          className="rounded-full hidden sm:flex"
+        >
           <Plus className="mr-1 h-4 w-4" /> Novo
         </Button>
       </div>
@@ -135,10 +169,9 @@ export function ProductsDataTable({
                       <TableHead
                         key={header.id}
                         className={
-                          header.column.id === "name" ||
-                          header.column.id === "actions"
+                          header.column.id === "name"
                             ? undefined
-                            : "hidden sm:table-cell"
+                            : "hidden sm:table-cell" // Esconde TUDO no mobile, exceto o nome
                         }
                       >
                         {header.isPlaceholder
@@ -160,8 +193,7 @@ export function ProductsDataTable({
                         <TableCell
                           key={cell.id}
                           className={
-                            cell.column.id === "name" ||
-                            cell.column.id === "actions"
+                            cell.column.id === "name"
                               ? undefined
                               : "hidden sm:table-cell"
                           }

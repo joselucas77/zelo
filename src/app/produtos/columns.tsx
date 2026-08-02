@@ -39,25 +39,62 @@ export function getProductColumns({
         const p = row.original;
         const low = p.stock <= p.minStock;
         return (
-          <div className="flex items-center gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-medium">{p.name}</span>
-                {low && (
-                  <Badge
-                    variant="outline"
-                    className="shrink-0 border-amber-500/40 text-amber-700"
-                  >
-                    <AlertTriangle className="mr-1 h-3 w-3" /> Baixo
-                  </Badge>
-                )}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {p.description || p.category}
-              </div>
-              <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
-                {p.category} · {p.stock} un · {currency(p.salePrice)}
-              </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-sm font-medium">{p.name}</span>
+              {low && (
+                <Badge
+                  variant="outline"
+                  className="shrink-0 border-amber-500/40 text-amber-700"
+                >
+                  <AlertTriangle className="mr-1 h-3 w-3" /> Baixo
+                </Badge>
+              )}
+            </div>
+            <div className="truncate text-xs text-muted-foreground">
+              {p.description || p.category}
+            </div>
+
+            {/* Info resumida para Mobile */}
+            <div className="mt-0.5 text-xs text-muted-foreground sm:hidden">
+              {p.category} · {p.stock} un · {currency(p.salePrice)}
+            </div>
+
+            {/* AÇÕES SÓ NO MOBILE (Aparecem embaixo do nome) */}
+            <div className="mt-2 flex items-center gap-1 border-t border-border/50 pt-2 sm:hidden">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onStock(p);
+                }}
+              >
+                <PackagePlus className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(p);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(p);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         );
@@ -98,7 +135,7 @@ export function getProductColumns({
       cell: ({ row }) => {
         const p = row.original;
         return (
-          <div className="flex justify-end gap-1">
+          <div className="hidden justify-end gap-1 sm:flex">
             <Button
               size="icon"
               variant="ghost"
