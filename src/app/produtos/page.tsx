@@ -117,7 +117,7 @@ function DeleteProduct({
         <AlertDialogHeader>
           <AlertDialogTitle>Remover produto?</AlertDialogTitle>
           <AlertDialogDescription>
-            "{product?.name}" será removido do catálogo. Esta ação não pode ser
+            {product?.name} será removido do catálogo. Esta ação não pode ser
             desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>

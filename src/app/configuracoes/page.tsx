@@ -270,8 +270,7 @@ function GroupsSection() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Remover grupo?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        "{g.name}" será removido. Esta ação não pode ser
-                        desfeita.
+                        {g.name} será removido. Esta ação não pode ser desfeita.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

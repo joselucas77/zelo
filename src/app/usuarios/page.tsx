@@ -159,7 +159,7 @@ export default function UsuariosPage() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          "{u.name}" perderá o acesso ao sistema. Esta ação não
+                          {u.name} perderá o acesso ao sistema. Esta ação não
                           pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
