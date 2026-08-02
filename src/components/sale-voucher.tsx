@@ -128,17 +128,9 @@ export function SaleVoucher({ sale, open, onClose, clientPhone }: Props) {
               className="rounded-2xl border border-border bg-card p-5 text-card-foreground"
             >
               <div className="flex flex-col items-center text-center">
-                {voucher.logo ? (
-                  <img
-                    src={voucher.logo}
-                    alt={`Logo de ${store.name}`}
-                    className="h-14 w-14 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <BadgeCheck className="h-6 w-6" />
-                  </div>
-                )}
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <BadgeCheck className="h-6 w-6" />
+                </div>
                 <div className="mt-2 text-base font-semibold">{store.name}</div>
                 {voucher.resellerName && (
                   <div className="text-xs text-muted-foreground">

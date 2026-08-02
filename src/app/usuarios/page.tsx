@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Plus,
   Pencil,
   Trash2,
   Users as UsersIcon,
@@ -341,7 +340,7 @@ function UserForm({
             <Label>Escopo de acesso *</Label>
             <Select
               value={form.groupId}
-              onValueChange={(v) => setForm({ ...form, groupId: v })}
+              onValueChange={(v) => setForm({ ...form, groupId: v as string })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um grupo" />

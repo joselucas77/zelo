@@ -39,7 +39,7 @@ export function SalesDataTable({
   data: Sale[];
 }) {
   const [globalFilter, setGlobalFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("Todas");
+  const [statusFilter, setStatusFilter] = useState<string | null>("Todas");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
