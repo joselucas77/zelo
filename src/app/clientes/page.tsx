@@ -18,6 +18,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"; // Importação do Drawer
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -33,8 +39,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area"; // Importação do ScrollArea
 import { clientsService } from "@/services/clients.service";
 import { useDataStore } from "@/store/useDataStore";
+import { useIsMobile } from "@/hooks/use-mobile"; // Importação do Hook
 import { currency, dateTime } from "@/lib/format";
 import type { Client } from "@/types";
 import { getClientColumns, type ClientTableData } from "./columns";
@@ -114,7 +122,7 @@ export default function ClientesPage() {
         }}
       />
 
-      {/* Detalhes (Sheet) */}
+      {/* Detalhes */}
       <ClientDetail
         client={detail}
         sales={sales}
@@ -125,7 +133,7 @@ export default function ClientesPage() {
         }}
       />
 
-      {/* Exclusão (Fora do Sheet para evitar bugs de foco do Radix) */}
+      {/* Exclusão (Fora do Sheet/Drawer para evitar bugs de foco do Radix) */}
       <DeleteClient client={deleting} onClose={() => setDeleting(null)} />
     </div>
   );
@@ -146,11 +154,93 @@ function ClientForm({
   isEdit: boolean;
   onSubmit: (data: Omit<Client, "id">) => Promise<void>;
 }) {
+  const isMobile = useIsMobile();
   const [form, setForm] = useState(initial);
 
   const update = (k: keyof Omit<Client, "id">, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // 1. Extrair os campos do formulário
+  const FormFields = (
+    <div className="space-y-3">
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Nome</Label>
+        <Input
+          value={form.name}
+          onChange={(e) => update("name", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Telefone</Label>
+        <Input
+          value={form.phone}
+          onChange={(e) => update("phone", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>WhatsApp</Label>
+        <Input
+          value={form.whatsapp}
+          onChange={(e) => update("whatsapp", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Endereço</Label>
+        <Input
+          value={form.address}
+          onChange={(e) => update("address", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Observações</Label>
+        <Textarea
+          rows={2}
+          value={form.notes ?? ""}
+          onChange={(e) => update("notes", e.target.value)}
+        />
+      </div>
+    </div>
+  );
+
+  // 2. Extrair os botões de ação
+  const ActionButtons = (
+    <div className="flex w-full justify-between gap-2">
+      <Button variant="outline" onClick={() => onOpenChange(false)}>
+        Cancelar
+      </Button>
+      <Button
+        disabled={!form.name.trim()}
+        onClick={async () => await onSubmit(form)}
+      >
+        {isEdit ? "Salvar" : "Cadastrar"}
+      </Button>
+    </div>
+  );
+
+  // 3. Renderização Mobile (Drawer Bottom)
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="h-screen">
+          <DrawerHeader className="shrink-0 px-4">
+            <DrawerTitle>
+              {isEdit ? "Editar cliente" : "Novo cliente"}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-6">
+            <ScrollArea className="flex-1 **:data-radix-scroll-area-thumb:hidden">
+              {FormFields}
+            </ScrollArea>
+            <div className="shrink-0 pt-4 border-t border-border">
+              {ActionButtons}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // 4. Renderização Desktop (Modal Padrão)
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
@@ -159,57 +249,8 @@ function ClientForm({
             {isEdit ? "Editar cliente" : "Novo cliente"}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Nome</Label>
-            <Input
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Telefone</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) => update("phone", e.target.value)}
-              />
-            </div>
-            <div>
-              <Label>WhatsApp</Label>
-              <Input
-                value={form.whatsapp}
-                onChange={(e) => update("whatsapp", e.target.value)}
-              />
-            </div>
-          </div>
-          <div>
-            <Label>Endereço</Label>
-            <Input
-              value={form.address}
-              onChange={(e) => update("address", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label>Observações</Label>
-            <Textarea
-              rows={2}
-              value={form.notes ?? ""}
-              onChange={(e) => update("notes", e.target.value)}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button
-            disabled={!form.name.trim()}
-            onClick={async () => await onSubmit(form)}
-          >
-            {isEdit ? "Salvar" : "Cadastrar"}
-          </Button>
-        </DialogFooter>
+        {FormFields}
+        <DialogFooter>{ActionButtons}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -226,6 +267,8 @@ function ClientDetail({
   onClose: () => void;
   onEdit: (c: Client) => void;
 }) {
+  const isMobile = useIsMobile();
+
   if (!client) return null;
 
   const clientSales = sales
@@ -238,88 +281,136 @@ function ClientDetail({
     .reduce((s, v) => s + v.total, 0);
   const last = clientSales[0]?.date;
 
+  // Conteúdo compartilhado entre Desktop e Mobile
+  const DetailContent = (
+    <div className="space-y-4 pb-4">
+      <div className="rounded-xl border border-border bg-card p-3 text-sm">
+        <div>
+          <span className="text-muted-foreground">Telefone:</span>{" "}
+          {client.phone}
+        </div>
+        <div>
+          <span className="text-muted-foreground">WhatsApp:</span>{" "}
+          {client.whatsapp}
+        </div>
+        <div>
+          <span className="text-muted-foreground">Endereço:</span>{" "}
+          {client.address || "—"}
+        </div>
+        {client.notes && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            {client.notes}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <MiniStat label="Total" value={currency(total)} />
+        <MiniStat
+          label="Pendente"
+          value={currency(pending)}
+          tone={pending > 0 ? "warn" : "default"}
+        />
+        <MiniStat
+          label="Última"
+          value={last ? dateTime(last).split(",")[0]! : "—"}
+        />
+      </div>
+
+      <Separator />
+
+      <div>
+        <h4 className="mb-2 text-xs font-semibold text-muted-foreground">
+          Histórico
+        </h4>
+        {clientSales.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            Nenhuma compra ainda.
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {clientSales.slice(0, 8).map((v) => (
+              <div
+                key={v.id}
+                className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm"
+              >
+                <div className="text-xs text-muted-foreground">
+                  {dateTime(v.date)}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold tabular-nums">
+                    {currency(v.total)}
+                  </span>
+                  <Badge
+                    variant={v.status === "paid" ? "secondary" : "outline"}
+                    className={
+                      v.status === "pending"
+                        ? "border-amber-500/40 text-amber-700"
+                        : ""
+                    }
+                  >
+                    {v.status === "paid" ? "Pago" : "Pendente"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Botões fixos no rodapé
+  const FooterButtons = (
+    <div className="shrink-0 pt-4 border-t border-border flex flex-wrap gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        render={
+          <Link
+            href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
+          </Link>
+        }
+      ></Button>
+      <Button size="sm" variant="outline" onClick={() => onEdit(client)}>
+        <Pencil className="mr-1 h-4 w-4" /> Editar
+      </Button>
+    </div>
+  );
+
+  // Renderização Mobile (Drawer Bottom)
+  if (isMobile) {
+    return (
+      <Drawer open={!!client} onOpenChange={(o) => !o && onClose()}>
+        <DrawerContent className="h-screen">
+          <DrawerHeader className="shrink-0 px-4">
+            <DrawerTitle>{client.name}</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-6 overflow-hidden">
+            <ScrollArea className="flex-1 **:data-radix-scroll-area-thumb:hidden">
+              {DetailContent}
+            </ScrollArea>
+            {FooterButtons}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Renderização Desktop (Sheet Lateral Padrão)
   return (
     <Sheet open={!!client} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle>{client.name}</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 space-y-4 px-4 pb-6">
-          <div className="rounded-xl border border-border bg-card p-3 text-sm">
-            <div>
-              <span className="text-muted-foreground">Telefone:</span>{" "}
-              {client.phone}
-            </div>
-            <div>
-              <span className="text-muted-foreground">WhatsApp:</span>{" "}
-              {client.whatsapp}
-            </div>
-            <div>
-              <span className="text-muted-foreground">Endereço:</span>{" "}
-              {client.address || "—"}
-            </div>
-            {client.notes && (
-              <div className="mt-2 text-xs text-muted-foreground">
-                {client.notes}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <MiniStat label="Total" value={currency(total)} />
-            <MiniStat
-              label="Pendente"
-              value={currency(pending)}
-              tone={pending > 0 ? "warn" : "default"}
-            />
-            <MiniStat
-              label="Última"
-              value={last ? dateTime(last).split(",")[0]! : "—"}
-            />
-          </div>
-
-          <Separator />
-
-          <div>
-            <h4 className="mb-2 text-xs font-semibold text-muted-foreground">
-              Histórico
-            </h4>
-            {clientSales.length === 0 ? (
-              <div className="text-sm text-muted-foreground">
-                Nenhuma compra ainda.
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {clientSales.slice(0, 8).map((v) => (
-                  <div
-                    key={v.id}
-                    className="flex items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm"
-                  >
-                    <div className="text-xs text-muted-foreground">
-                      {dateTime(v.date)}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold tabular-nums">
-                        {currency(v.total)}
-                      </span>
-                      <Badge
-                        variant={v.status === "paid" ? "secondary" : "outline"}
-                        className={
-                          v.status === "pending"
-                            ? "border-amber-500/40 text-amber-700"
-                            : ""
-                        }
-                      >
-                        {v.status === "paid" ? "Pago" : "Pendente"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2 pt-2">
+        <div className="mt-4 px-4 pb-6">
+          {DetailContent}
+          <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-2">
             <Button
               variant="outline"
               size="sm"
