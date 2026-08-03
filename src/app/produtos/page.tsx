@@ -10,6 +10,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"; // Importação do Drawer
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -23,10 +29,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getProductColumns } from "./columns";
 import { ProductsDataTable } from "./data-table";
 import { productsService } from "@/services/products.service";
 import { useDataStore } from "@/store/useDataStore";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Product } from "@/types";
 
 type FormState = Omit<Product, "id">;
@@ -69,11 +77,9 @@ export default function ProdutosPage() {
         columns={columns}
         data={products}
         categories={categories}
-        onCreateClick={() => setCreating(true)} // NOVA PROP AQUI
+        onCreateClick={() => setCreating(true)}
       />
 
-      {/* MILAGRE DO KEY: Quando o editing muda, o React recria o componente, 
-          limpando o estado do formulário automaticamente! */}
       <ProductForm
         key={editing?.id ?? "new"}
         open={creating || !!editing}
@@ -139,124 +145,6 @@ function DeleteProduct({
   );
 }
 
-function ProductForm({
-  open,
-  onOpenChange,
-  initial,
-  isEdit,
-  onSubmit,
-}: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  initial: FormState;
-  isEdit: boolean;
-  onSubmit: (data: FormState) => Promise<void>;
-}) {
-  const [form, setForm] = useState<FormState>(initial);
-  const [busy, setBusy] = useState(false);
-
-  // REMOVIDO O useMemo BUGADO. O prop "key" no pai cuida de resetar o estado!
-
-  const update = (k: keyof FormState, v: string | number) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "Editar produto" : "Novo produto"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <Label>Nome</Label>
-            <Input
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label>Categoria</Label>
-            <Input
-              value={form.category}
-              onChange={(e) => update("category", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label>Estoque atual</Label>
-            <Input
-              type="number"
-              value={form.stock}
-              onChange={(e) => update("stock", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <Label>Preço de custo</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.costPrice}
-              onChange={(e) => update("costPrice", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <Label>Preço de venda</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={form.salePrice}
-              onChange={(e) => update("salePrice", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <Label>Estoque mínimo</Label>
-            <Input
-              type="number"
-              value={form.minStock}
-              onChange={(e) => update("minStock", Number(e.target.value))}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <Label>Descrição</Label>
-            <Textarea
-              rows={2}
-              value={form.description}
-              onChange={(e) => update("description", e.target.value)}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <Label>Observações</Label>
-            <Textarea
-              rows={2}
-              value={form.notes ?? ""}
-              onChange={(e) => update("notes", e.target.value)}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button
-            disabled={busy || !form.name.trim()}
-            onClick={async () => {
-              setBusy(true);
-              try {
-                await onSubmit(form);
-              } finally {
-                setBusy(false);
-              }
-            }}
-          >
-            {isEdit ? "Salvar" : "Cadastrar"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function StockEntry({
   product,
   onClose,
@@ -279,7 +167,7 @@ function StockEntry({
               </span>{" "}
               — atual: {product.stock}
             </div>
-            <div>
+            <div className="space-y-2">
               <Label>Quantidade a adicionar</Label>
               <Input
                 type="number"
@@ -306,6 +194,162 @@ function StockEntry({
             Adicionar
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ProductForm({
+  open,
+  onOpenChange,
+  initial,
+  isEdit,
+  onSubmit,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  initial: FormState;
+  isEdit: boolean;
+  onSubmit: (data: FormState) => Promise<void>;
+}) {
+  const isMobile = useIsMobile();
+  const [form, setForm] = useState<FormState>(initial);
+  const [busy, setBusy] = useState(false);
+
+  const update = (k: keyof FormState, v: string | number) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  // 1. Extrair os campos do formulário para não duplicar código
+  const FormFields = (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Nome</Label>
+        <Input
+          value={form.name}
+          onChange={(e) => update("name", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Categoria</Label>
+        <Input
+          value={form.category}
+          onChange={(e) => update("category", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Estoque atual</Label>
+        <Input
+          type="number"
+          value={form.stock}
+          onChange={(e) => update("stock", Number(e.target.value))}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Preço de custo</Label>
+        <Input
+          type="number"
+          step="0.01"
+          value={form.costPrice}
+          onChange={(e) => update("costPrice", Number(e.target.value))}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Preço de venda</Label>
+        <Input
+          type="number"
+          step="0.01"
+          value={form.salePrice}
+          onChange={(e) => update("salePrice", Number(e.target.value))}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Estoque mínimo</Label>
+        <Input
+          type="number"
+          value={form.minStock}
+          onChange={(e) => update("minStock", Number(e.target.value))}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Descrição</Label>
+        <Textarea
+          rows={2}
+          value={form.description}
+          onChange={(e) => update("description", e.target.value)}
+        />
+      </div>
+      <div className="sm:col-span-2 space-y-2">
+        <Label>Observações</Label>
+        <Textarea
+          rows={2}
+          value={form.notes ?? ""}
+          onChange={(e) => update("notes", e.target.value)}
+        />
+      </div>
+    </div>
+  );
+
+  // 2. Extrair os botões de ação
+  const ActionButtons = (
+    <div className="flex w-full justify-between gap-2">
+      <Button variant="outline" onClick={() => onOpenChange(false)}>
+        Cancelar
+      </Button>
+      <Button
+        disabled={busy || !form.name.trim()}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await onSubmit(form);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {isEdit ? "Salvar" : "Cadastrar"}
+      </Button>
+    </div>
+  );
+
+  // 3. Renderização Mobile (Drawer Bottom)
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="h-screen">
+          {/* Header fixo */}
+          <DrawerHeader className="shrink-0 px-4">
+            <DrawerTitle>
+              {isEdit ? "Editar produto" : "Novo produto"}
+            </DrawerTitle>
+          </DrawerHeader>
+
+          {/* Container flexível para o scroll */}
+          <div className="flex min-h-0 flex-1 flex-col px-4 pb-6">
+            <ScrollArea className="flex-1 **:data-radix-scroll-area-thumb:hidden">
+              {FormFields}
+            </ScrollArea>
+
+            {/* Footer fixo separado por uma borda */}
+            <div className="shrink-0 pt-4 border-t border-border">
+              {ActionButtons}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // 4. Renderização Desktop (Modal Padrão)
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? "Editar produto" : "Novo produto"}
+          </DialogTitle>
+        </DialogHeader>
+        {FormFields}
+        <DialogFooter>{ActionButtons}</DialogFooter>
       </DialogContent>
     </Dialog>
   );
