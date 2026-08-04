@@ -5,9 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NAV, SECONDARY_NAV } from "@/lib/navigation-data";
 import { ModeToggle } from "./mode-toggle";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Settings } from "lucide-react";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   // Função auxiliar para não repetir a lógica de verificação de rota
   const matchRoute = (item: { to: string }) =>
@@ -31,7 +36,21 @@ export function SiteHeader() {
         </div>
         <h1 className="text-base font-medium">{pageTitle}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <ModeToggle />
+          {isMobile ? (
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative overflow-hidden"
+              render={
+                <Link href="/configuracoes">
+                  <Settings className="h-[1.2rem] w-[1.2rem]" />
+                  <span className="sr-only">Configurações</span>
+                </Link>
+              }
+            />
+          ) : (
+            <ModeToggle />
+          )}
         </div>
       </div>
     </header>
