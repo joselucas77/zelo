@@ -12,7 +12,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { NAV, SECONDARY_NAV } from "@/lib/navigation-data";
-import { Handbag, LogOut, Settings } from "lucide-react";
+import { Handbag, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

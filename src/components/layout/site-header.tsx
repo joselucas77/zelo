@@ -6,9 +6,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { TitlePages } from "@/lib/navigation-data";
 import { ModeToggle } from "./mode-toggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Settings } from "lucide-react";
-import { Button } from "../ui/button";
-import Link from "next/link";
 import SettingsItem from "./settings-itens";
 
 export function SiteHeader() {

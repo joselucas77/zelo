@@ -1,6 +1,11 @@
 import type { Sale, PaymentMethod, SaleStatus } from "@/types";
 
-const methods: PaymentMethod[] = ["cash", "pix", "credit", "debit"];
+const methods: PaymentMethod[] = [
+  "Dinheiro",
+  "Pix",
+  "Cartão de Crédito",
+  "Cartão de Débito",
+];
 const statuses: SaleStatus[] = ["paid", "paid", "paid", "pending"];
 
 function daysAgo(n: number) {
