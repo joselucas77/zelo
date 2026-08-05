@@ -21,7 +21,12 @@ type TitlePage = {
 };
 
 export const NAV: NavItem[] = [
-  { to: "/", label: "Dashboard", short: "Início", icon: LayoutDashboard },
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    short: "Início",
+    icon: LayoutDashboard,
+  },
   { to: "/produtos", label: "Produtos", short: "Produtos", icon: Package },
   {
     to: "/nova-venda",
