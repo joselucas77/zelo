@@ -4,12 +4,10 @@ import { useEffect, useState } from "react";
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type SortingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -35,53 +33,60 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Product } from "@/types";
+import type { UserTableData } from "./columns";
 
-export function ProductsDataTable({
+export function UsersDataTable({
   columns,
   data,
-  categories,
+  groups,
   onCreateClick,
 }: {
-  columns: ColumnDef<Product>[];
-  data: Product[];
-  categories: string[];
+  columns: ColumnDef<UserTableData>[];
+  data: UserTableData[];
+  groups: { id: string; name: string }[];
   onCreateClick: () => void;
 }) {
   const [globalFilter, setGlobalFilter] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [statusFilter, setStatusFilter] = useState("Todos");
+  const [groupFilter, setGroupFilter] = useState("Todos");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters, globalFilter },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    state: { globalFilter, columnFilters },
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     globalFilterFn: (row, _id, value) => {
       const term = String(value).trim().toLowerCase();
       if (!term) return true;
-      const p = row.original;
+      const u = row.original;
       return (
-        p.name.toLowerCase().includes(term) ||
-        p.category.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term)
+        u.name.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term)
       );
     },
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 8 } },
+    initialState: { pagination: { pageSize: 10 } },
   });
 
-  const categoryFilter =
-    (table.getColumn("category")?.getFilterValue() as string) ?? "Todas";
+  // Sincroniza os filtros com as colunas da tabela
+  useEffect(() => {
+    table
+      .getColumn("groupLabel")
+      ?.setFilterValue(groupFilter === "Todos" ? undefined : groupFilter);
+    table
+      .getColumn("active")
+      ?.setFilterValue(
+        statusFilter === "Todos" ? undefined : statusFilter === "Ativo",
+      );
+  }, [statusFilter, groupFilter, table]);
 
   useEffect(() => {
     table.setPageIndex(0);
-  }, [globalFilter, categoryFilter, table]);
+  }, [globalFilter, statusFilter, groupFilter, table]);
 
   const rows = table.getRowModel().rows;
   const totalFiltered = table.getFilteredRowModel().rows.length;
@@ -95,51 +100,66 @@ export function ProductsDataTable({
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar produto ou categoria..."
+              placeholder="Buscar por nome ou e-mail..."
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="rounded-xl pl-9"
             />
           </div>
-
           <Popover>
             <PopoverTrigger
               render={
                 <Button
-                  variant={categoryFilter !== "Todas" ? "default" : "outline"}
+                  variant={
+                    statusFilter !== "Todos" || groupFilter !== "Todos"
+                      ? "default"
+                      : "outline"
+                  }
                   size="icon"
                   className="rounded-xl shrink-0"
-                  aria-label="Filtrar categorias"
                 >
                   <ListFilter className="h-4 w-4" />
                 </Button>
               }
             ></PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-1">
-              <div className="flex flex-col gap-0.5">
-                <Button
-                  variant={categoryFilter === "Todas" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="justify-start h-8"
-                  onClick={() =>
-                    table.getColumn("category")?.setFilterValue(undefined)
-                  }
-                >
-                  Todas as categorias
-                </Button>
-                {categories.map((c) => (
-                  <Button
-                    key={c}
-                    variant={categoryFilter === c ? "secondary" : "ghost"}
-                    size="sm"
-                    className="justify-start h-8"
-                    onClick={() =>
-                      table.getColumn("category")?.setFilterValue(c)
-                    }
+            <PopoverContent align="end" className="w-56 p-3 space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Status
+                </label>
+                <div className="flex flex-col gap-1">
+                  {["Todos", "Ativo", "Inativo"].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setStatusFilter(s)}
+                      className={`rounded-lg px-3 py-1.5 text-sm text-left transition-colors ${statusFilter === s ? "bg-secondary text-secondary-foreground" : "hover:bg-accent"}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                  Escopo
+                </label>
+                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+                  <button
+                    onClick={() => setGroupFilter("Todos")}
+                    className={`rounded-lg px-3 py-1.5 text-sm text-left transition-colors ${groupFilter === "Todos" ? "bg-secondary text-secondary-foreground" : "hover:bg-accent"}`}
                   >
-                    {c}
-                  </Button>
-                ))}
+                    Todos
+                  </button>
+                  {groups.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => setGroupFilter(g.name)}
+                      className={`rounded-lg px-3 py-1.5 text-sm text-left transition-colors ${groupFilter === g.name ? "bg-secondary text-secondary-foreground" : "hover:bg-accent"}`}
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -150,7 +170,7 @@ export function ProductsDataTable({
           size="lg"
           className="w-full rounded-full sm:hidden"
         >
-          <Plus className="mr-2 h-4 w-4" /> Adicionar novo produto
+          <Plus className="mr-2 h-4 w-4" /> Adicionar novo usuário
         </Button>
         <Button
           onClick={onCreateClick}
@@ -215,7 +235,7 @@ export function ProductsDataTable({
                       colSpan={columns.length}
                       className="h-24 text-center text-sm text-muted-foreground"
                     >
-                      Nenhum produto encontrado.
+                      Nenhum usuário encontrado.
                     </TableCell>
                   </TableRow>
                 )}
@@ -238,7 +258,6 @@ export function ProductsDataTable({
             className="h-8 w-8"
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
-            aria-label="Página anterior"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -251,7 +270,6 @@ export function ProductsDataTable({
             className="h-8 w-8"
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
-            aria-label="Próxima página"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

@@ -8,8 +8,6 @@ import {
   Store as StoreIcon,
   ShieldCheck,
   Save,
-  Users as UsersIcon,
-  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -48,7 +46,6 @@ import {
   type Permissions,
   type StoreInfo,
 } from "@/store/useSettingsStore";
-import Link from "next/link";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ConfiguracoesPage() {
@@ -56,37 +53,8 @@ export default function ConfiguracoesPage() {
   return (
     <div className="w-full px-4">
       <StoreSection />
-      {isMobile && <UsersLinkCard />}
       <GroupsSection />
     </div>
-  );
-}
-
-function UsersLinkCard() {
-  return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <UsersIcon className="h-4 w-4 text-primary" />
-          Usuários
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Link
-          href="/usuarios"
-          className="flex items-center justify-between gap-3 rounded-xl border border-border/70 p-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
-        >
-          <div className="min-w-0">
-            <div className="text-sm font-medium">Gerenciar usuários</div>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Crie, edite e remova usuários, defina credenciais e atribua o
-              escopo de acesso.
-            </p>
-          </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-        </Link>
-      </CardContent>
-    </Card>
   );
 }
 
