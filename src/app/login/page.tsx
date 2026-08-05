@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, Sparkles, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,9 +72,6 @@ export default function LoginPage() {
       />
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-5 py-10 sm:px-6">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <Sparkles className="h-6 w-6" />
-          </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Entrar na Revenda
           </h1>
@@ -142,17 +139,6 @@ export default function LoginPage() {
                 />
                 Lembrar de mim
               </label>
-              <button
-                type="button"
-                className="text-sm font-medium text-primary hover:underline"
-                onClick={() =>
-                  toast.info(
-                    "Contate o administrador para redefinir sua senha.",
-                  )
-                }
-              >
-                Esqueci minha senha
-              </button>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
@@ -167,18 +153,6 @@ export default function LoginPage() {
             </Button>
           </div>
         </form>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Ao continuar, você concorda com os termos de uso da plataforma.
-        </p>
-        <div className="mt-2 text-center">
-          <Link
-            href="/"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            Voltar ao início
-          </Link>
-        </div>
       </div>
     </div>
   );
