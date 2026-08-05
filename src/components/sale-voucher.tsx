@@ -44,7 +44,7 @@ export function SaleVoucher({ sale, open, onClose, clientPhone }: Props) {
             .slice(-6)
             .toUpperCase()
         : "",
-    [sale?.id],
+    [sale],
   );
 
   const render = async () => {
