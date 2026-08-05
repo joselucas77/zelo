@@ -11,7 +11,7 @@ import {
   SidebarGroupContent,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { NAV } from "@/lib/navigation-data";
+import { NAV, SECONDARY_NAV } from "@/lib/navigation-data";
 import { Handbag, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -66,19 +66,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem className="pb-1">
-                <SidebarMenuButton
-                  render={
-                    <Link
-                      href="/configuracoes"
-                      className="flex items-center gap-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  }
-                />
-              </SidebarMenuItem>
+              {SECONDARY_NAV.map((item) => {
+                const active = isActive(item.to);
+                return (
+                  <SidebarMenuItem className="pb-1" key={item.to}>
+                    <SidebarMenuButton
+                      tooltip={item.label}
+                      render={
+                        <Link href={item.to}>
+                          {<item.icon />}
+                          <span>{item.label}</span>
+                        </Link>
+                      }
+                      className={
+                        active ? "bg-primary text-primary-foreground" : ""
+                      }
+                    ></SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   variant="outline"

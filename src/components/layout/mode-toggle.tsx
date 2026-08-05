@@ -4,8 +4,9 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ModeToggle() {
+export function ModeToggle({ className }: { className?: string }) {
   const { setTheme, resolvedTheme } = useTheme();
 
   // Usamos o resolvedTheme para garantir que funcione mesmo se o usuário
@@ -21,9 +22,8 @@ export function ModeToggle() {
       variant="outline"
       size="icon"
       onClick={toggleTheme}
-      className="relative overflow-hidden"
+      className={cn("relative overflow-hidden", className)}
     >
-      {/* Ícone do Sol (Fica visível no modo Claro) */}
       <Sun
         className={`h-[1.2rem] w-[1.2rem] transition-all duration-500 ease-in-out ${
           isDark
@@ -31,8 +31,6 @@ export function ModeToggle() {
             : "scale-100 rotate-0 translate-y-0 opacity-100" // Entra: tamanho normal, volta ao centro
         }`}
       />
-
-      {/* Ícone da Lua (Fica visível no modo Escuro) */}
       <Moon
         className={`absolute h-[1.2rem] w-[1.2rem] transition-all duration-500 ease-in-out ${
           isDark

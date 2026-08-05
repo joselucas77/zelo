@@ -3,12 +3,13 @@
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { NAV, SECONDARY_NAV } from "@/lib/navigation-data";
+import { TitlePages } from "@/lib/navigation-data";
 import { ModeToggle } from "./mode-toggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Settings } from "lucide-react";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import SettingsItem from "./settings-itens";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -19,7 +20,8 @@ export function SiteHeader() {
     item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
 
   // Procura na navegação principal. Se não achar (undefined), procura na secundária.
-  const currentRoute = NAV.find(matchRoute) || SECONDARY_NAV.find(matchRoute);
+  // const currentRoute = NAV.find(matchRoute) || SECONDARY_NAV.find(matchRoute);
+  const currentRoute = TitlePages.find(matchRoute);
 
   // Se achar em qualquer um dos dois, usa o label. Senão, usa "Página".
   const pageTitle = currentRoute?.label || "Página";
@@ -36,21 +38,7 @@ export function SiteHeader() {
         </div>
         <h1 className="text-base font-medium">{pageTitle}</h1>
         <div className="ml-auto flex items-center gap-2">
-          {isMobile ? (
-            <Button
-              variant="outline"
-              size="icon"
-              className="relative overflow-hidden"
-              render={
-                <Link href="/configuracoes">
-                  <Settings className="h-[1.2rem] w-[1.2rem]" />
-                  <span className="sr-only">Configurações</span>
-                </Link>
-              }
-            />
-          ) : (
-            <ModeToggle />
-          )}
+          {isMobile ? <SettingsItem /> : <ModeToggle />}
         </div>
       </div>
     </header>

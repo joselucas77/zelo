@@ -15,6 +15,11 @@ type NavItem = {
   primary?: boolean;
 };
 
+type TitlePage = {
+  label: string;
+  to: string;
+};
+
 export const NAV: NavItem[] = [
   { to: "/", label: "Dashboard", short: "Início", icon: LayoutDashboard },
   { to: "/produtos", label: "Produtos", short: "Produtos", icon: Package },
@@ -30,6 +35,37 @@ export const NAV: NavItem[] = [
 ];
 
 export const SECONDARY_NAV: NavItem[] = [
+  {
+    to: "/usuarios",
+    label: "Usuários",
+    short: "Usuários",
+    icon: Users,
+  },
+  {
+    to: "/configuracoes",
+    label: "Configurações",
+    short: "Config",
+    icon: Settings,
+  },
+];
+
+export const TitlePages: TitlePage[] = [
+  { label: "Dashboard", to: "/" },
+  { label: "Produtos", to: "/produtos" },
+  { label: "Nova Venda", to: "/nova-venda" },
+  { label: "Clientes", to: "/clientes" },
+  { label: "Histórico", to: "/historico" },
+  { label: "Configurações", to: "/configuracoes" },
+  { label: "Usuários", to: "/usuarios" },
+];
+
+export const SettingsItens: NavItem[] = [
+  {
+    to: "/usuarios",
+    label: "Usuários",
+    short: "Usuários",
+    icon: Users,
+  },
   {
     to: "/configuracoes",
     label: "Configurações",
