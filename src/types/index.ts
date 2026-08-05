@@ -20,7 +20,11 @@ export interface Client {
   notes?: string;
 }
 
-export type PaymentMethod = "cash" | "pix" | "credit" | "debit";
+export type PaymentMethod =
+  | "Dinheiro"
+  | "Pix"
+  | "Cartão de Crédito"
+  | "Cartão de Débito";
 export type SaleStatus = "paid" | "pending";
 
 export interface SaleItem {
@@ -44,8 +48,8 @@ export interface Sale {
 }
 
 export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-  cash: "Dinheiro",
-  pix: "Pix",
-  credit: "Cartão de Crédito",
-  debit: "Cartão de Débito",
+  Dinheiro: "Dinheiro",
+  Pix: "Pix",
+  "Cartão de Crédito": "Cartão de Crédito",
+  "Cartão de Débito": "Cartão de Débito",
 };

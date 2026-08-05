@@ -80,6 +80,14 @@ export default function NovaVenda() {
 
   const canCheckout = client && items.length > 0;
 
+  const handleCheckoutBack = () => {
+    if (checkoutStep === "payment") {
+      setStep("review"); // Volta para a etapa de revisão
+    } else {
+      setStep("cart"); // Volta para o carrinho (isso fecha o Drawer automaticamente)
+    }
+  };
+
   const finalize = async () => {
     if (!client) return;
     await salesService.create({
@@ -275,7 +283,10 @@ export default function NovaVenda() {
       >
         <DrawerContent className="h-screen">
           {/* 1. Header com shrink-0 para nunca encolher */}
-          <DrawerHeader className="shrink-0 px-4 md:px-6">
+          <DrawerHeader className="flex-row items-center gap-2 shrink-0 px-4 md:px-6">
+            <Button size="icon" variant="ghost" onClick={handleCheckoutBack}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
             <DrawerTitle>
               {checkoutStep === "review" ? "Revisar carrinho" : "Pagamento"}
             </DrawerTitle>
@@ -369,7 +380,7 @@ export default function NovaVenda() {
               </>
             ) : (
               <>
-                <div className="mb-3 space-y-1">
+                {/* <div className="mb-3 space-y-1">
                   {items.map((it) => (
                     <div
                       key={it.productId}
@@ -383,15 +394,35 @@ export default function NovaVenda() {
                       </div>
                     </div>
                   ))}
+                </div> */}
+                {/* Lista de itens com Scroll, igual ao de "Revisar carrinho" */}
+                <div className="min-h-0 flex-1 mb-3">
+                  <ScrollArea className="h-full **:data-radix-scroll-area-thumb:hidden pr-2">
+                    <div className="space-y-1 pr-2">
+                      {items.map((it) => (
+                        <div
+                          key={it.productId}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <div className="min-w-0 truncate pr-2">
+                            {it.quantity}× {it.productName}
+                          </div>
+                          <div className="font-medium tabular-nums">
+                            {currency(it.unitPrice * it.quantity)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
 
-                <div className="mb-3">
+                <div className="mb-3 flex flex-col gap-2">
                   <Label>Forma de pagamento</Label>
                   <Select
                     value={payment}
                     onValueChange={(v) => setPayment(v as PaymentMethod)}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-2/5">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -441,7 +472,7 @@ export default function NovaVenda() {
                   </div>
                 )}
 
-                <div className="mb-4">
+                <div className="mb-4 flex flex-col gap-2">
                   <Label>Observações</Label>
                   <Textarea
                     rows={2}
@@ -451,14 +482,6 @@ export default function NovaVenda() {
                 </div>
 
                 <div className="flex gap-2 pb-4 shrink-0 mt-auto">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="rounded-full"
-                    onClick={() => setStep("review")}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
                   <Button
                     onClick={finalize}
                     size="lg"
