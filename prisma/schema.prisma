@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PaymentMethod {
+  DINHEIRO
+  PIX
+  CARTAO_DE_CREDITO
+  CARTAO_DEBITO
+}
+
+enum SaleStatus {
+  PAGO
+  PENDENTE
+}
+
+model Loja {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  ownerName String
+  phone     String?
+  email     String? @unique
+  document  String?
+  logo      String?
+  active    Boolean @default(true)
+
+  address Address[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  street       String?
+  number       String?
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  zipCode      String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  lojaId String?
+  loja   Loja?   @relation(fields: [lojaId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city])
+  @@index([state])
+}
+
+model AccessGroup {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  active      Boolean @default(true)
+  permissions Json
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  phone     String?
+  avatar    String?
+  active    Boolean   @default(true)
+  lastLogin DateTime?
+
+  groupId String
+  group   AccessGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  address Address[]
+  sales   Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model Client {
+  id      String    @id @default(cuid())
+  name    String
+  phone   String
+  email   String?
+  notes   String?
+  address Address[]
+
+  sales Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model Category {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  active Boolean @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id   String  @id @default(cuid())
+  code String? @unique
+  name String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  description String?
+  image       String?
+  costPrice   Decimal @db.Decimal(10, 2)
+  salePrice   Decimal @db.Decimal(10, 2)
+  stock       Int
+  minStock    Int
+  notes       String?
+
+  sales SaleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([categoryId])
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  date          DateTime      @default(now())
+  total         Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  status        SaleStatus    @default(PENDENTE)
+  dueDate       DateTime?
+  notes         String?
+
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  clientName String?
+
+  sellerId String?
+  seller   User?   @relation(fields: [sellerId], references: [id])
+
+  items SaleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([status])
+  @@index([clientId])
+  @@index([sellerId])
+}
+
+model SaleItem {
+  saleId      String
+  productId   String
+  productName String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(10, 2)
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@id([saleId, productId])
+  @@index([productId])
+}
